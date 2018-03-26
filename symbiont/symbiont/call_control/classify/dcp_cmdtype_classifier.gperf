@@ -1,0 +1,52 @@
+%{
+/*   */
+#include <string.h>
+#include <assert.h>
+#include "dcp_cmdtype_classifier.h"
+%}
+struct dcp_cmdtype_s { char *name; int type; };
+int classify_cmdtype(const char *cmdtype)
+{
+	int	len;
+	const struct dcp_cmdtype_s *dct;
+	
+	assert(cmdtype);
+	len = strlen(cmdtype);
+	if (len > 0) {
+		dct = lookup_cmdtype(cmdtype, len);
+		if (dct) return dct->type;
+		else return MMI_CMD_UNDEFINED;
+	} else return MMI_CMD_UNDEFINED;
+}
+%%
+"led",			MMI_CMD_LED
+"program",		MMI_CMD_PROGRAM
+"text",			MMI_CMD_TEXT
+"onhook",		MMI_CMD_ONHOOK
+"offhook",		MMI_CMD_OFFHOOK
+"noring",		MMI_CMD_NORING
+"beep_once",		MMI_CMD_BEEP_ONCE
+"beep",			MMI_CMD_BEEP
+"ring_once",		MMI_CMD_RING_ONCE
+"ring1",		MMI_CMD_RING1
+"ring2",		MMI_CMD_RING2
+"ring3",		MMI_CMD_RING3
+"tmr_start",		MMI_CMD_TMR_START
+"tmr_stop",		MMI_CMD_TMR_STOP
+"init",			MMI_CMD_INIT
+"identify",		MMI_CMD_IDENTIFY
+"echo_on",		MMI_CMD_ECHO_ON
+"echo_off",		MMI_CMD_ECHO_OFF
+"scroll_down",		MMI_CMD_SCROLL_DOWN
+"reset_scroll",		MMI_CMD_RESET_SCROLL
+"keypad_dtmf",		MMI_CMD_KEYPAD_DTMF
+"keypad_events",	MMI_CMD_KEYPAD_EVENTS
+"ring_pattern1",	MMI_CMD_RING_PATTERN1
+"ring_pattern2",	MMI_CMD_RING_PATTERN2
+"ring_pattern3",	MMI_CMD_RING_PATTERN3
+"ring_pattern4",	MMI_CMD_RING_PATTERN4
+"ring_pattern5",	MMI_CMD_RING_PATTERN5
+"ring_pattern6",	MMI_CMD_RING_PATTERN6
+"ring_pattern7",	MMI_CMD_RING_PATTERN7
+"ring_pattern8",	MMI_CMD_RING_PATTERN8
+%%

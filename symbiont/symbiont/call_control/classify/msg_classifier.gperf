@@ -1,0 +1,60 @@
+%{
+/* enum yate_msg_class is defined in following header */
+#include <string.h>
+#include <assert.h>
+#include "msg_classifier.h"
+%}
+struct msg_class_s { char *name; int type; };
+int classify_msg(const char *msgname)
+{
+	int	len;
+	const struct msg_class_s *mc;
+	
+	assert(msgname);
+	len = strlen(msgname);
+	if (len > 0) {
+		mc = lookup_msg_class(msgname, len);
+		if (mc) return mc->type;
+		else return YMSG_UNKNOWN;
+	} else return YMSG_UNKNOWN;
+}
+%%
+"engine.status",	YMSG_ENGINE_STATUS
+"engine.timer",		YMSG_ENGINE_TIMER
+"engine.debug",		YMSG_ENGINE_DEBUG
+"engine.command",	YMSG_ENGINE_COMMAND
+"engine.help",		YMSG_ENGINE_HELP
+"engine.halt",		YMSG_ENGINE_HALT
+"engine.stop",		YMSG_ENGINE_STOP
+"call.preroute",	YMSG_CALL_PREROUTE
+"call.route",		YMSG_CALL_ROUTE
+"call.execute",		YMSG_CALL_EXECUTE
+"call.drop",		YMSG_CALL_DROP
+"call.progress",	YMSG_CALL_PROGRESS
+"call.ringing",		YMSG_CALL_RINGING
+"call.answered",	YMSG_CALL_ANSWERED
+"call.cdr",		YMSG_CALL_CDR
+"call.update",		YMSG_CALL_UPDATE
+"chan.dtmf",		YMSG_CHAN_DTMF
+"chan.masquerade",	YMSG_CHAN_MASQUERADE
+"chan.locate",		YMSG_CHAN_LOCATE
+"chan.transfer",	YMSG_CHAN_TRANSFER
+"chan.control",		YMSG_CHAN_CONTROL
+"chan.attach",		YMSG_CHAN_ATTACH
+"chan.connected",	YMSG_CHAN_CONNECTED
+"chan.disconnected",	YMSG_CHAN_DISCONNECTED
+"chan.hangup",		YMSG_CHAN_HANGUP
+"chan.operation",	YMSG_CHAN_OPERATION
+"chan.replaced",	YMSG_CHAN_REPLACED
+"chan.rtp",		YMSG_CHAN_RTP
+"chan.startup",		YMSG_CHAN_STARTUP
+"chan.text",		YMSG_CHAN_TEXT
+"module.update",	YMSG_MODULE_UPDATE
+"msg.execute",		YMSG_MSG_EXECUTE
+"user.auth",		YMSG_USER_AUTH
+"user.register",	YMSG_USER_REGISTER
+"imt.operation",	YMSG_IMT_OPERATION
+"dcp.event",		YMSG_DCP_EVENT
+"dcp.command",		YMSG_DCP_COMMAND
+"symbiont.command",	YMSG_SYMBIONT_COMMAND
+%%

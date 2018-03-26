@@ -1,0 +1,7 @@
+	-Report the error when yate closes the socket 
+	and the connection evaporates from under our feet.
+	
+	-TCP transport.
+	
+	-Debug yxt_disconnect()
+	

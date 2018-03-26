@@ -1,0 +1,63 @@
+IMT module control
+------------------
+
+
+HANDLED MESSAGES
+
+	Incoming call.execute
+	
+		"autoanswer" is checked and call is answered
+		immediately if "autoanswer" is set to "yes"
+	
+	
+	Outgoing call.execute
+	
+		"direct" - is copied to generated call.execute "callto"
+		
+	imt.operation
+	
+		requires "operation" and "address" parameters
+		
+		"address" is the name of the controlled line
+		e.g. "imtdcp/1"
+		
+		"operation" can be one of:
+			"ping" - causes "pong" response.
+			
+			"answer" - answer connected call
+			
+			"hangup" - hangup connected call and or free seized line
+			
+			"seize" - seize the line for dialing
+			
+			"busyout" - take the line out of service
+			
+			"release" - change state to idle from "out of service" or "seized"
+	
+GENERATED MESSAGES
+
+	chan.startup
+	
+	call.answered
+	
+	chan.hangup
+	
+	call.route
+	
+	call.execute
+	
+	chan.dtmf
+---------------------------
+
+
+
+Incoming call:
+
+1. IDLE state
+2. call.execute received by symbiont
+3. Line state is changed to SEIZED by imt.operation = seize
+4. Terminal is ringing
+5. Terminal is off-hook
+6. Line state changed to TALKING by imt.operation = answer
+7. A-side is hungup. 
+8. Line is state is changed to SEIZED by imt.operation = hangup

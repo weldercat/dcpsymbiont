@@ -1,0 +1,240 @@
+analog init:
+
+1. load config
+2. get max sections:
+	n = s_cfg.sections();
+3. iterate thru sects: 
+
+for(i = 0; i < n; i++) {
+	NamedList *sect = s_cfg.get_section(i);
+}	
+
+4. section should not be "general" neither start
+from reserved word (driver name, line name etc)
+
+	group = findGroup(*sect);
+	removeGroup(group) if section exists but not enabled
+
+if no group but there is a section:
+
+	group = new ModuleGroup(..., *sect);
+	lock();
+	m_groups.append(group);
+	unlock();
+	String error;
+
+	res = group->initialize(sect, general, error);
+	if (res) {
+		printf("failed to %s group %s: Error %s\n",
+			(create ? "create" : "reload"), sect->c_str(), error.safe());
+		if (create) removeGroup(group);
+	}
+
+----------------------------------
+/* 
+ * bool initialize(const NamedList &params,  
+ *			const NamedList &defaults,  String &error);
+ *
+ * these are private fields from SignallingCircuitGroup:
+ *
+ *   ObjList m_circuits;	// The circuits belonging to this group
+ *   ObjList m_spans;		// The spans belonging to this group
+ *   ObjList m_ranges;		// Additional circuit ranges
+ *   SignallingCircuitRange m_range; // Range containing all circuits belonging to this group
+ *   unsigned int m_base;
+ *
+ * Get the circuit list
+ *   inline ObjList& circuits() { return m_circuits; }
+ *
+ */
+--------------------------------------
+Group init:
+	bool ok = true;
+	bool all, remove;
+	unsigned int n, i;
+	SignallingCircuit *cic;
+	NamedList dummy("");
+	NamedList *lineParams;
+	String sectName;
+	ModuleLine *line;
+
+	Lock2 lock(this, fxoRec());	// ???
+	ok = create(params, defaults, error);
+	all = params.getBoolValue("useallcircuits", true);
+	n = circuits().length();
+	for (i = 0; i < n; i++) {
+		cic = static_cast<SignallingCircuit *>(circuits()[i]);
+		if (!cic) continue;
+		sectName = "line " + toString() + "/" + String(cic->code());
+		lineParams = s_cfg.getSection(sectName);
+		if (!lineParams) lineParams = &dummy;
+		remove = !lineParams->getBoolValue("enable", true);
+		line = static_cast<ModuleLine *>(findLine(cic->code()));
+		if (remove) {
+			if (line) {
+				XDebug(this, DebugAll, "Removing line=%s [%p]", line->address(), this);
+				plugin.lineUnavailable(line);
+				TelEngine::destruct(line);
+			}
+			continue;
+		}
+// Don't create the line if useallcircuits is false and no section in config
+		if (!all && lineParams == &dummy) continue;
+
+		line = new ModuleLine(this, cic->code(), *lineParams, params);
+
+		if (line) appendLine(line);
+		else {
+			Debug(this, DebugNote, "Failed to create line %s/%u [%p]", 
+			      debugName(), cic->code(), this);
+			TelEngine::destruct(line);
+		}
+	}
+	ok = reload(params, defaults, error);
+	/* reload reads parameter from params and set internal variables */
+	return ok;
+}
+
+	
+
+	// config  lines 
+--------------------------------
+
+/*  Create FXS/FXO group data: called by initialize() on first init */
+bool ModuleGroup::create(const NamedList &params,  
+		const NamedList &defaults, String &error)
+{
+	String device = params.getValue("spans");
+	ObjList *voice = device.split(', ', false);
+	bool ok = true;
+	if (voice) buildGroup(this, voice, error);
+	else {
+		printf("missing or invalid spans: %s\n", device.c_str());
+		ok = false;
+	}
+	TelEngine::destruct(voice);
+	return ok;
+}
+-----------------------------------
+
+/* Build the circuit list for the given group
+ * void ModuleGroup::buildGroup(ModuleGroup *group,  
+ * 	ObjList &spanList,  String &error)
+ */
+{	
+	unsigned int start = 0;
+	ObjList *o;
+	String *s;
+	SignallingCircuit *span;
+	
+	if (!group) return;
+	for (o = spanList.skipNull(); o; o = o->skipNext()) {
+		s = static_cast<String *>(o->get());
+		if (s->null())	continue;
+		span = buildSpan(*s, start);
+		if (!span) {
+			error << "Failed to build span '" << *s << "'";
+			break;
+		}
+		start += span->increment();
+	}
+}
+----------------------------
+    /**
+     * Create a circuit span using the factory
+     * @param name Name of the span to create
+     * @param start Desired start of circuit codes in span
+     * @param params Optional parameters for creation of span and circuits
+     * @return Pointer to new circuit span or NULL on failure
+     */
+SignallingCircuitSpan* buildSpan(const String& name, 
+	unsigned int start = 0, NamedList* params = 0);
+
+
+
+-----------------------------
+========================================================================
+Imt line call.execute processing
+bool ImtDriver::msgExecute(Message &msg, String &dest)
+{
+	CallEndpoint *peer;
+	ModuleLine *line = 0;
+	ModuleGroup *group;
+	int cic;
+	String tmp, cause;
+	const char *error = "failure";
+	ImtChannel *imtCh;
+	
+	peer = YOBJECT(CallEndpoint, msg.userData());
+	if (!peer) {
+		cause = "no data channel";
+		return;
+	}
+
+	/* decode cic & group part of the "dest" address 
+	 * done by decodeAddr() */
+	cic = decodeAddr(dest, tmp, true);
+	group = findGroup(tmp);	/* tmp - group part of the addr */
+	
+	if (cic < 0) {
+		cause = "invalid cic";
+		return;
+	}
+
+	line = static_cast<ModuleLine *>(group->findLine(cic));
+	if (!line) {
+		error = "noroute";
+		return;
+	}
+	if (line->userdata) {
+		error = "busy";
+		cause << "Line '" << line->address() << "' is busy";
+		return;
+	}
+	if (line->state() == AnalogLine::OutOfService) {
+		cause << "Line '" << line->address() << "' is out of service";
+		error = "noroute";
+		return;
+	}
+	if (!line->ref()) cause = "ref() failed";
+	
+	if (!line || cause) {
+		Debug(this, DebugNote, "IMT call failed. %s", cause.c_str());
+		msg.setParam("error", error);
+		return false;
+	}
+
+/* successfull processing */
+	msg.clearParam("error");
+	imtCh = new ImtChannel(line, &msg);
+	imtCh->initChan();
+	
+
+}
+
+====================================================
+audio control:
+// Set data source and consumer
+bool AnalogChannel::setAudio(bool in)
+{
+	// getSource() and getConsumer() are implemented in Channel::
+	if ((in && getSource()) || (!in && getConsumer()))
+		return true;
+
+//m_line is set by constructor and points to assoc line
+	SignallingCircuit *cic = m_line ? m_line->circuit() : 0;
+
+	if (cic) {
+		if (in)
+			setSource(static_cast<DataSource *>(cic->getObject(YATOM("DataSource"))));
+		else
+			setConsumer(static_cast<DataConsumer *>(cic->getObject(YATOM("DataConsumer"))));
+	}
+
+	DataNode *res = in ? (DataNode *)getSource() : (DataNode *)getConsumer();
+	if (res) DDebug(this, DebugAll, "Data %s set to (%p): '%s' [%p]", 
+		 	in?"source":"consumer", res, res->getFormat().c_str(), this);
+	else Debug(this, DebugNote, "Failed to set data %s%s [%p]", 
+		      in?"source":"consumer", cic?"":". Circuit is missing", this);
+	return res != 0;
+}

@@ -1,0 +1,28 @@
+%{
+/*  dcp erase mode classifier   */
+#include <string.h>
+#include <assert.h>
+#include "dcp_erase_classifier.h"
+%}
+struct dcp_erase_s { char *name; int type; };
+int classify_erase(const char *erase)
+{
+	int	len;
+	const struct dcp_erase_s *ers;
+	
+	assert(erase);
+	len = strlen(erase);
+	if (len > 0) {
+		ers = lookup_erase(erase, len);
+		if (ers) return ers->type;
+		else return -1;
+	} else return -1;
+}
+%%
+"none",		MMI_ERASE_NONE
+"tail",		MMI_ERASE_TAIL
+"head",		MMI_ERASE_HEAD
+"line",		MMI_ERASE_LINE
+"all",		MMI_ERASE_ALL
+"display",	MMI_ERASE_ALL
+%%

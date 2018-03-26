@@ -1,0 +1,9 @@
+remote signalling element
+A module that multiplexes several TDM D-chan HDLC
+links over SCTP SIGTRAN transport.
+
+HDLC packets are encapsulated using HUA (HDLC user adaptation) - 
+IUA-like packet format.
+
+HUA transparently encapsulates any HDLC data (8- or 16-bits address), 
+unlike the IUA that requires 16-bits address.

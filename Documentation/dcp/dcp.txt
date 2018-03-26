@@ -1,0 +1,317 @@
+DCP COMMANDS 
+
+8434DX
+------
+Terminal BLF buttons are numbered from upper to lower 
+and from left to right.
+Like this:
+     
+[blf1]=   =[blf6]		[blf11]=   =[blf23]
+[blf2]=   =[blf7]		[blf12]=   =[blf24]
+[blf3]=   =[blf8]		[blf13]=   =[blf25]
+[blf4]=   =[blf9]		...         ...
+[blf5]=   =[blf10]		[blf22]=   =[blf34]
+
+Leds are named by function - for example "Mute led" or
+by blf number and color. BLF buttons have two LEDS each - 
+the red one is upper and the green one is lower.
+
+
+Terminal status reports:
+________________________
+
+All numbers are hex.
+
+c0 0b 24 2a 0a 40	- "Test" key released for 8434DX
+c0 0b 0a 2a 08 50	- "Test" key released for 8410D
+Last byte (40 and 50 in above examples) encodes
+ring pattern, probably along with some other info.
+third byte probably encodes blf field size -
+it is 36 (0x24) for 8434DX and 10 (0x0a) for 8410D
+
+
+80 02	- Phone is off-hook
+80 01	- Phone is on-hook
+
+80 20 04 - "Drop" key
+80 20 06 - "Conf" key
+80 20 08 - "Transfer" key
+80 20 0a - "Hold" key
+
+80 20 0e - blf key 1
+80 20 10 - blf key 2
+80 20 12 - blf key 3
+80 20 14 - blf key 4
+80 20 16 - blf key 5
+80 20 18 - blf key 6
+80 20 1a - blf key 7
+80 20 1c - blf key 8
+80 20 1e - blf key 9
+80 20 20 - blf key 10
+
+80 20 22 - blf key 11	(on 8410D this key is MENU exit)
+80 20 24 - blf key 12	(on 8410D this is menu item1 selected)
+80 20 26 - blf key 13	(on 8410D this is menu item2 selected)
+80 20 28 - blf key 14	("    "     "   "   "  item3   " etc, etc
+80 20 2a - blf key 15
+80 20 2c - blf key 16
+80 20 2e - blf key 17
+80 20 30 - blf key 18
+80 20 32 - blf key 19
+80 20 34 - blf key 20
+80 20 36 - blf key 21
+80 20 38 - blf key 22
+
+80 20 3a - blf key 23
+80 20 3c - blf key 24
+80 20 3e - blf key 25
+80 20 40 - blf key 26
+80 20 42 - blf key 27
+80 20 44 - blf key 28
+80 20 46 - blf key 29
+80 20 48 - blf key 30
+80 20 4a - blf key 31
+80 20 4c - blf key 32
+80 20 4e - blf key 33
+80 20 50 - blf key 34
+
+KEYPAD EVENTS
+------------------------------
+Following events sent by keypad when 
+it's in event mode. See commands "80 05" & "80 06"
+
+80 22 02 - keypad "1" pressed
+80 22 04 - keypad "2" pressed
+80 22 06 - keypad "3" pressed
+80 22 08 - keypad "4" pressed
+80 22 0a - keypad "5" pressed
+80 22 0c - keypad "6" pressed
+80 22 0e - keypad "7" pressed
+80 22 10 - keypad "8" pressed
+80 22 12 - keypad "9" pressed
+80 22 14 - keypad "0" pressed
+80 22 16 - keypad "*" pressed
+80 22 18 - keypad "#" pressed
+
+80 23 02 - keypad "1" released
+80 23 04 - keypad "2" released
+80 23 06 - keypad "3" released
+80 23 08 - keypad "4" released
+80 23 0a - keypad "5" released
+80 23 0c - keypad "6" released
+80 23 0e - keypad "7" released
+80 23 10 - keypad "8" released
+80 23 12 - keypad "9" released
+80 23 14 - keypad "0" released
+80 23 16 - keypad "*" released
+80 23 18 - keypad "#" released
+-----------------------------
+
+83 20 02 - "Exit" key (Menu exit executed)
+81 20 02 - menu item 1 selected	(81 2f 03 - lights up the mark above this itme)
+				(81 20 03 - extinguishes the mark )
+81 20 04 - menu item 2 selected	(81 2f 05 - enable mark )
+...				(81 20 05 - disable mark) etc...
+81 20 1c - menu item 14 selected
+81 20 1e - menu item 15 selected
+
+------------------
+Commands to terminal:
+
+80 03 00 - stop ringing & tone signals
+80 03 01 - play short tone signal
+80 03 09 - play periodic tone signal
+80 03 0b - start periodic ring
+80 03 0c - start periodic ring 2
+80 03 0d - start periodic ring 3
+80 03 0e - ring once with short ring
+
+Going off-hook stops the ringing but it 
+starts again after on-hook if not cancelled explicitly.
+
+80 05 - switch keypad to DTMF mode. After this command
+	keypad buttons do not send any events but generate DTMF tones
+	if off-hook. Nothing happens in this mode if on-hook.
+	(Recent tests show that DTMF tones are generated regardless
+	of hookswitch status. DTMF are just sent into B-chan
+	even if on-hook)
+	
+80 06 - switch keypad to message mode. After this command 
+	keypad  seases to send DTMF and starts to send
+	DEPRESSED/RELEASED events. Phone still does echo keypad events
+	on the display if off-hook.
+
+80 09 xx - select ring pattern
+	Definity sends 80 09 00
+	different values of xx affect how ring1, ring2 and ring 3 sound
+	xx can be in range from 00 to 07
+
+80 0a - Soft reset. Extinguishes all leds and display, hangs up etc.
+
+80 0e - causes phone to hang up if handset is on-hook and speakerphone is on
+80 0f - causes phone to go off-hook with speakerphone on if 
+	handset is not off-hook.
+This two above commands will cause terminal to send 80 01 or 80 02
+status reports indicating whether it is on- or off-hook.
+
+
+80 2x nn	- set led "nn" to the mode "x"
+
+Leds are numbered the same way as corresponding buttons,
+for example blf key 1 has status number 0e and has
+two leds: 0e - the red one and 0f - the green one.
+
+"MESSAGE WAIT INDICATOR" has led number 0d;
+
+blf key 1 	0e - red led
+		0f - green led
+blf key 2 	10 - red led
+		11 - green led
+
+For 8410D green leds for blf keys 12 and further control
+triangle marks above corresponding menu item.
+i.e. 80 2f 25 makes 8410D to light up the triangle mark above 
+first menu item. 80 20 25 removes this triangle.
+...
+blf key 34 -	50 - red led
+		51 - green led
+
+for 8434DX triangle mark for the first menu item is 
+controlled using 81 2x nn command.
+
+
+Led modes:
+0	-switch off
+2	-on with fast periodic darkening
+3	-medium fast flashing
+8	-medium fast flashing
+a	-fast flashing
+d	-periodic series of fast flashes (flutter)
+	Terminal beeps once and extinguishes appropriate menu 
+	item marker if flutter mode is applied to it.
+f	-steady on
+
+For example:
+
+80 28 0f - will cause green led for the BLF key 1 to 
+	start flashing medium fast.
+80 20 0d - switch off MWI led.
+
+a0 0b - causes terminal to send the same string as after "Test" key 
+	release.
+
+Controlling display module
+--------------------------
+Text to display is sent using e3 command
+For example:
+ 
+e3 74 65 73 74 - writes "text" at the current cursor
+position.
+Cursor is controlled by CSI-sequences. 
+CSI-sequences are a subset of ones used by VT100 terminal.
+At least these two are supported:  
+	esc[r;cH - position the cursor at the row=r & col=c
+	
+	For 8434DX - row 0 is the lower row on the screen and row 3 is
+	the upper one.
+	
+	esc[pK	 - erase depending on param:
+		p = 0 - erase to end of line
+		p = 1 - erase to begin of line
+		p = 2 - erase line
+Probably there are others - it is not explored yet.
+
+NOTICE - Writing anything (even space char) into any
+	but the two leftmost columns in the upper row
+	disables keypad echo.
+	Issuing esc[<number>K while cursor in upper row 
+	re-enables echo even if it didn't clear the offending
+	characters.
+
+
+
+83 04 01	- start or reset timer on display
+83 04 02	- stop and remove timer from display
+
+83 04 03	- set viewport to the beginning of the display
+83 04 04	- scroll viewport to the next row 
+			(8410D has three rows - 0, 1, 2. by 40. chars each.
+			Row 3 is mapped back to 0).
+			(8434DX also has three rows - 0,1,2 by 40. chars each
+			But it also has row #3 which is the upper row.
+			It has 40 chars and is not scrolled at all and
+			is not affected by scrolling command.
+
+83 04 41 - enable keypad echo to display 
+83 04 42 - disable keypad echo to display
+
+
+Programming menu and other params
+--------------
+
+e1 a3 c5 00 - enable programming 
+	(must be sent before each prog. command)
+
+e1 27 xx <sum_lo> <sum high>
+
+Sum is calculated by adding xx byte to the 0x1ef
+
+xx codes features bit field:
+bit	0	- speakerphone is 1-way
+bit	1	- speakerphone is disabled
+bit	2	- mute button disabled
+
+Probably there are others but it's not explored yet.
+
+For example:
+e1 27 00 ef 10 - enable mute button & 2-way speakerphone
+e1 27 01 ef 11 - enable 1-way speakerphone
+e1 27 02 ef 12 - disable speakerphone
+e1 27 04 ef 14 - disable mute button
+
+
+e1 44 <number> 00 <TEXT_> <sum_lo> <sum_hi> - program
+	menu item number to be "text".
+
+number can be from 01 to 0f inclusively - 8434DX has
+fivteen menu items max.
+
+TEXT_ is exactly 5 chars long.
+sum_lo and sum_hi are low and high bytes of sum of all 
+bytes starting from number inclusively.
+For example:
+	setting menu item 3 to string "Candy":
+	e1 44 03 00 43 61 6e 64 79 f2 01
+	
+
+Terminal replies with e1 33 <status>  to any of the 
+programming commands.
+where status is:
+	00	-programming ok
+	01	-Terminal is off-hook
+	02	-checksum error
+	05	-programming not enabled
+	
+Probably there are other status codes, I think it is 
+safe to assume that any non-zero is a kind of error.
+
+
+There are other unexplored programing sequences sniffed
+on the 8410D terminal:
+
+e1 50 |1a 1a 2a 99 0b a0 c7 3d c1 8c| <f3 03>
+e1 64 |80 00 2a 99 92 89 c1 8c| <ab 03>
+
+In these two commands the part between | | seems to be 
+the payload and the part in < > is the checksum which is 
+the sum of all payload bytes.
+
+When dialed <RING><MUTE><1><1> the phone prints following
+info:
+
+u-Law	FONT=D	DLI=Auto
+PRIMARY=03f3 ADJ=03ab SPEAKER=0119
+
+Where 03f3 and 03ab are checksums from above two 
+programming commands.
+

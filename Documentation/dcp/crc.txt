@@ -1,0 +1,41 @@
+
+e1 a3 c5 00 - enable programming
+
+e1 27 04 ef 14 	- disable MUTE button
+e1 27 00 ef 10  - enable MUTE button
+
+e1 44 01 00 4c 61 73 74 20 b5 01 - Set menu item #1 to "Last "
+e1 44 01 00 52 6e 67 4f 66 dd 01 - Set menu item #1 to "RngOf"
+
+e1 44 02 00 20 53 41 43 20 19 01 - set menu item #2 to " SAC "
+e1 44 03 00 41 75 74 43 42 b2 01 - set menu item #3 to "AutCB"
+e1 44 04 00 43 46 72 77 64 da 01 - set menu item #4 to "CFrwd"
+e1 44 05 00 54 6d 44 61 79 e4 01 - set menu item #5 to "TmDay"
+
+e1 44 06 00 54 69 6d 65 72 07 02 - set menu item #6 to "Timer"
+                              ^^ - this one stands out, see comment below.
+                              
+e1 44 07 00 50 72 6f 67 20 bf 01 - set menu item #7 to "Prog "
+e1 44 08 00 56 69 65 77 20 c3 01 - set menu item #8 to "View "
+e1 44 09 00 20 44 69 72 20 68 01 - set menu item #9 to " Dir "
+e1 44 0a 00 47 72 70 50 67 ea 01 - set menu item #10 to "GrpPg"
+
+e1 44 0b 00 20 41 44 31 31 12 01 - set menu item #11 to " AD11"
+e1 44 0c 00 20 41 44 31 32 14 01 - set menu item #12 to " AD12"
+
+e1 50 1a 1a 2a 99 0b a0 c7 3d c1 8c f3 03 - program something unknown
+e1 64 80 00 2a 99 92 89 c1 8c ab 03 	  - program something unknown
+
+
+
+e1 33 00 	- programming OK (response from phone)
+e1 33 02	- Not programmed, bad checksum (response from phone)
+e1 33 05	- programming not enabled (response from phone)
+
+Regarding the timer - turning on the timer is performed by the
+terminal without asking the switch, 
+so probably different byte at the end of command.
+But this byte is included in checksum calculation because
+cahnging it without reclculating the checksum causes 
+programming to fail with checksum error.
+

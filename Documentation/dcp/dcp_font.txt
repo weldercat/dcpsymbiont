@@ -1,0 +1,22 @@
+characters for 8434DX phone:
+(codes are hex):
+
+02	-checkered block
+03	-pound sign
+04	-overscore
+05	-thick right arrow ">"
+06	-down arrow "v"
+80	- Greek gamma or cyrillic ghe
+81	- Greek delta
+82	- Something like 8
+83	- Greek lambda
+84
+
+88	-Greek letter like cactus
+89	-Omega
+
+eb 	-inverted qustion mark
+ee	-spanish n with a upper dash
+
+ff	-fully filled block
+

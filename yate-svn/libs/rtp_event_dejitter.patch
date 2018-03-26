@@ -1,0 +1,98 @@
+diff -brU 3 ./yrtp-orig/dejitter.cpp ./yrtp-patched/dejitter.cpp
+--- ./yrtp-orig/dejitter.cpp	2016-02-17 11:23:16.000000000 +0500
++++ ./yrtp-patched/dejitter.cpp	2016-07-31 16:56:17.000000000 +0500
+@@ -77,13 +77,19 @@
+ 
+ bool RTPDejitter::rtpRecv(bool marker, int payload, unsigned int timestamp, const void* data, int len)
+ {
++    return RTPDejitter::rtpRecvSpecial(marker, payload, timestamp, data, len, false);
++
++}
++
++bool RTPDejitter::rtpRecvSpecial(bool marker, int payload, unsigned int timestamp, const void* data, int len, bool nocheck_dups)
++{
+     u_int64_t when = 0;
+     bool insert = false;
+ 
+     if (m_headStamp) {
+ 	// at least one packet got out of the queue
+ 	int dTs = timestamp - m_headStamp;
+-	if (dTs == 0)
++	if ((dTs == 0) && (!nocheck_dups))
+ 	    return true;
+ 	else if (dTs < 0) {
+ 	    DDebug(DebugNote,"Dejitter dropping TS %u, last delivered was %u [%p]",
+@@ -91,7 +97,11 @@
+ 	    return false;
+ 	}
+ 	u_int64_t now = Time::now();
+-	int64_t rate = 1000 * (now - m_headTime) / dTs;
++	int64_t rate;
++	if (nocheck_dups) {
++	    rate = m_sampRate;
++	} else {
++    	    rate = 1000 * (now - m_headTime) / dTs;
+ 	if (rate > 0) {
+ 	    if (m_sampRate) {
+ 		if (m_fastRate) {
+@@ -110,12 +120,13 @@
+ 	}
+ 	else
+ 	    rate = m_sampRate;
++	}
+ 	if (rate > 0)
+ 	    when = m_headTime + (dTs * rate / 1000) + m_minDelay;
+ 	else
+ 	    when = now + m_minDelay;
+ 	if (m_tailStamp) {
+-	    if (timestamp == m_tailStamp)
++	    if ((timestamp == m_tailStamp) && (!nocheck_dups))
+ 		return true;
+ 	    if (((int)(timestamp - m_tailStamp)) < 0)
+ 		insert = true;
+@@ -138,7 +149,7 @@
+     if (insert) {
+ 	for (ObjList* l = m_packets.skipNull(); l; l = l->skipNext()) {
+ 	    RTPDelayedData* pkt = static_cast<RTPDelayedData*>(l->get());
+-	    if (pkt->timestamp() == timestamp)
++	    if ((pkt->timestamp() == timestamp) && (!nocheck_dups))
+ 		return true;
+ 	    if (pkt->timestamp() > timestamp && pkt->scheduled() > when) {
+ 		l->insert(new RTPDelayedData(when,marker,payload,timestamp,data,len));
+diff -brU 3 ./yrtp-orig/session.cpp ./yrtp-patched/session.cpp
+--- ./yrtp-orig/session.cpp	2016-02-17 11:23:16.000000000 +0500
++++ ./yrtp-patched/session.cpp	2016-07-31 17:19:02.000000000 +0500
+@@ -273,7 +273,7 @@
+     m_rollover = rollover;
+ 
+     if (m_dejitter) {
+-	if (!m_dejitter->rtpRecv(marker,typ,m_tsLast,pc,len))
++	if (!m_dejitter->rtpRecvSpecial(marker,typ,m_tsLast,pc,len, (typ == eventPayload() )))
+ 	    m_ioLostPkt++;
+ 	return;
+     }
+diff -brU 3 ./yrtp-orig/yatertp.h ./yrtp-patched/yatertp.h
+--- ./yrtp-orig/yatertp.h	2016-02-17 11:23:16.000000000 +0500
++++ ./yrtp-patched/yatertp.h	2016-07-31 17:19:34.000000000 +0500
+@@ -381,6 +381,21 @@
+ 	const void* data, int len);
+ 
+     /**
++     * Process and store one RTP data packet with or without checking for duplicate timestamps
++     * This is required to correctly buffer RTP event payload
++     * @param marker True if the marker bit is set in data packet
++     * @param payload Payload number
++     * @param timestamp Sampling instant of the packet data
++     * @param data Pointer to data block to process
++     * @param len Length of the data block in bytes
++     * @param nocheck_dups Packets with duplicate timestamps will be queued anyway if true
++     * @return True if the data packet was queued
++     */
++    virtual bool rtpRecvSpecial(bool marker, int payload, unsigned int timestamp,
++	const void* data, int len, bool nocheck_dups );
++
++
++    /**
+      * Clear the delayed packets queue and all variables
+      */
+     void clear();

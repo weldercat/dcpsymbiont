@@ -1,0 +1,53 @@
+Hardware setup
+--------------
+
+There are two known to me ways to connect a DCP phone to
+the PC - the hard one and the expensive one :)
+
+DCP phones support two kinds of physical layer - 
+2-wire ISDN Up0 and something like a strange proprietory 
+ 4-wire cross-breed between T1-AMI PHY with ISDN-Up0 packet format.
+
+As far as I know there are no open info on these 4-wire 
+transmitters so we'll focus on 2-wire link.
+
+First of all you need an ISDN card.
+
+If you're lucky you may find the ISDN card with a Up0 ports.
+I heard that there are such beasts somewhere.
+
+If so, you can just plug your DCP phone into the ISDN card,
+provide phantom power (Definity switch puts -48VDC but the phone can 
+run on as low as -24VDC) and if everything is ok, the phone will 
+power and you may get to the software configuration.
+
+Unfortunately most of the cheap ISDN cards come with S/T ports
+instead of Up0. In that case you may try to find S/T to Up0 converters - 
+they are quite expensive though.
+
+One european company that makes these devices asked 
+something around EUR300 for one converter unit! 
+IMHO this is crazy.
+
+So, here goes the hard way - you can use one DCP phone 
+to act as line termination for another DCP phone!
+For this to work your ISDN card must have IOM/2 bus output 
+(Junghanns HFC-4S has one) and the phone you've choosen
+to become line termination must be of specific vintage -
+8410D that has separate SBC controller.
+
+These are distinguishable by following traits:
+- handset cord jack is on the left side (while looking on the phone 
+  when it's right in front of you) (jack is not on the bottom side).
+ 
+- has blue "shift" button (not the blue "ring" button).
+
+- asks for speakerphone calibration upon startup.
+
+Then you have to have basic soldering skills and 
+basic understanding of digital circuits.
+
+Unfortunately I havent taken pictures when working on these
+modifications so I'll provide only brief instructions 
+of what to do next. 
+

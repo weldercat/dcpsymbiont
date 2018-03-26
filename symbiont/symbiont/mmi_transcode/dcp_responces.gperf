@@ -1,0 +1,16 @@
+%{
+/* enum dcp_status is defined in following header */
+#include "dcp_resp_status.h"
+%}
+struct dcp_status_s { char *s; int type; };
+%%
+"\xc0\x0b",	DCP_ST_HWID
+"\x80\x01",	DCP_ST_ONHOOK
+"\x80\x02",	DCP_ST_OFFHOOK
+"\x80\x20",	DCP_ST_KEY
+"\x80\x22",	DCP_ST_PAD_PRESS
+"\x80\x23",	DCP_ST_PAD_RELEASE
+"\x83\x20",	DCP_ST_MENU_EXIT
+"\x81\x20",	DCP_ST_MENU_ITEM
+"\xe1\x33",	DCP_ST_PRG_RESULT
+%%

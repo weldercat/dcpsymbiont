@@ -1,0 +1,7 @@
+inter-machine trunk module
+It provides voice circuit without the signalling.
+
+Signalling and call handling must be done by any
+other module, for example by symbiont via external interface.
+
+

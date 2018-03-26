@@ -1,0 +1,29 @@
+%{
+/*  dcp led mode classifier    */
+#include <string.h>
+#include <assert.h>
+#include "dcp_ledmode_classifier.h"
+%}
+struct dcp_ledmode_s { char *name; int type; };
+int classify_ledmode(const char *ledmode)
+{
+	int	len;
+	const struct dcp_ledmode_s *lm;
+	
+	assert(ledmode);
+	len = strlen(ledmode);
+	if (len > 0) {
+		lm = lookup_ledmode(ledmode, len);
+		if (lm) return lm->type;
+		else return -1;
+	} else return -1;
+}
+%%
+"off",		LIGHT_OFF
+"steady",	LIGHT_STEADY
+"darkening",	LIGHT_DARKENING
+"slowflash",	LIGHT_SLOWFLASH
+"mediumflash",	LIGHT_MEDIUMFLASH
+"fastflash",	LIGHT_FASTFLASH
+"flutter",	LIGHT_FLUTTER
+%%

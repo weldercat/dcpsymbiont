@@ -1,0 +1,27 @@
+;remote signalling link multiplexer
+;
+;
+;[general]
+;general settings
+;
+;
+;
+;
+;[mux1]
+;
+;enable=true
+;
+;;spans list that contain D-chans for tdm links to be multiplexed
+;tdmlinks=zap_isdn1,zap_isdn2
+;
+;;interface start number for multiplexed link
+;ifstart=0
+;
+;;offset to be added for each interface 
+;ifoffset=0
+;
+;;total number of interfaces multiplexed
+;ifcount=2
+;
+;;sigtransport sccp link for the HUA-multiplexed D-chans
+;sigconn=hua_link

@@ -1,0 +1,27 @@
+%{
+/*  dcp led color classifier */
+#include <string.h>
+#include <assert.h>
+#include "dcp_color_classifier.h"
+%}
+struct dcp_color_s { char *name; int type; };
+int classify_color(const char *color)
+{
+	int	len;
+	const struct dcp_color_s *clr;
+	
+	assert(color);
+	len = strlen(color);
+	if (len > 0) {
+		clr = lookup_color(color, len);
+		if (clr) return clr->type;
+		else return -1;
+	} else return -1;
+}
+%%
+"green",	LED_COLOR_GREEN
+"red",		LED_COLOR_RED
+"blue",		LED_COLOR_BLUE
+"yellow",	LED_COLOR_YELLOW
+"white",	LED_COLOR_WHITE
+%%
